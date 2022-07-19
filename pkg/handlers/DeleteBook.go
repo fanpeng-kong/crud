@@ -2,31 +2,30 @@ package handlers
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"log"
+	"fmt"
 	"net/http"
 	"strconv"
 
-	"example.com/crud/pkg/mocks"
 	"example.com/crud/pkg/models"
 	"github.com/gorilla/mux"
 )
 
-func DeleteBook(w http.ResponseWriter, r *http.Request) {
+func (h handler) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	// Read dynamic id parameter
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	// Iterate over all the mock books
-	for index, book := range mocks.Books {
-		if book.Id == id {
-			// Delete book and send a response if the book Id matches dynamic Id
-			mocks.Books = append(mocks.Books[:index], mocks.Books[index+1:]...)
+	// Find the book by Id
+	var book models.Book
 
-			w.Header().Add("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode("Deleted")
-			break
-		}
+	if result := h.DB.First(&book, id); result.Error != nil {
+		fmt.Println(result.Error)
 	}
+
+	// Delete that book
+	h.DB.Delete(&book)
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Deleted")
 }

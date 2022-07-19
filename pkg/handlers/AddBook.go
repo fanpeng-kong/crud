@@ -2,16 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 
-	"example.com/crud/pkg/mocks"
 	"example.com/crud/pkg/models"
 	)
 
-func AddBook(w http.ResponseWriter, r *http.Request) {
+func (h handler) AddBook(w http.ResponseWriter, r *http.Request) {
 	// Read to request body
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
@@ -24,8 +23,9 @@ func AddBook(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(body, &book)
 
 	// Append to the Book mocks
-	book.Id = rand.Intn(100)
-	mocks.Books = append(mocks.Books, book)
+	if result := h.DB.Create(&book); result.Error != nil {
+		fmt.Println(result.Error)
+	}
 
 	// Send a 201 created response
 	w.Header().Add("Content-Type", "application/json")
